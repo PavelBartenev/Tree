@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
 typedef char* type;
 
@@ -44,14 +45,13 @@ int Draw_param(NODE*, FILE*);
 
 int Draw_tree(NODE*, FILE*, int);
 
+int new_character(NODE*, NODE*, FILE*);
+
+
+
+/////  автоматизировать рисование с system, убрать знаки вопроса сделать предложения утердительными сравнения в виде цельных предложений(на грамматику забить) ||| char и type  
 int main()
 {
-	//FILE* input = fopen("input2.txt", "r+");
-
-	//NODE* head = tree_constructor();
-
-	//file_reader(input, head);
-
 	Play();
 
 	return 0;
@@ -67,7 +67,7 @@ int Play()
 
 	int game_mode = 0;
 
-	printf("If you want to play with Akinator press 1\nIf you want to ask the item's definition press 2\nIf you want to compare the items press 3\nUse _ instead of spaces\n\n");
+	printf("If you want to play with Akinator press 1\nIf you want to ask the item's definition press 2\nIf you want to compare the items press 3\n\n");
 
 	scanf("%d", &game_mode);
 
@@ -87,6 +87,10 @@ int Play()
 	}
 
 	Draw(head);
+	
+	system("dot -Tpng D:\\vs_projects\\Tree\\graph_code_test.txt -oD:\\vs_projects\\Tree\\graph_image.png");
+
+	//system("D:\\vs_projects\\Tree\\graph_image.png");
 
 	return 0;
 }
@@ -142,7 +146,7 @@ int file_reader(FILE* input, NODE* node)
 	{
 		type data = (type)calloc(MAXDATA, sizeof(char));
 
-		fscanf(input, " { %s", data);
+		fscanf(input, " { '%[^']%*c", data);
 
 		node->data = data;
 	}
@@ -162,7 +166,7 @@ int file_reader(FILE* input, NODE* node)
 		{
 			type left_data = (type)calloc(MAXDATA, sizeof(char));
 
-			fscanf(input, " %s", left_data);
+			fscanf(input, " '%[^']%*c", left_data);
 
 			NODE* left_node = push_left(node, left_data);
 
@@ -186,7 +190,7 @@ int file_reader(FILE* input, NODE* node)
 		{
 			type right_data = (type)calloc(MAXDATA, sizeof(char));
 
-			fscanf(input, " %s", right_data);
+			fscanf(input, " '%[^']%*c", right_data);
 
 			NODE* right_node = push_right(node, right_data);
 
@@ -241,25 +245,36 @@ int akinator(NODE* head, NODE* node, FILE* input)
 		return 0;
 	}
 
+	new_character(head, node, input);
+
+	return 0;
+}
+
+int new_character(NODE* head, NODE* node, FILE* input)
+{
 	printf("Who it really was?\n");
 
 	type new_character = (type)calloc(MAXDATA, sizeof(char));
 
-	scanf("%s", new_character);
+	scanf(" %[^.]%*c", new_character);
 
 	printf("Please, ask a question with answer 'yes' in case of %s and 'no' in case of %s\n", new_character, node->data);
 
 	type difference = (type)calloc(MAXDATA, sizeof(char));
 
-	scanf("%s", difference);
+	if (!difference)
+		return 1;
+
+	scanf(" %[^?]", difference);
 
 	NODE* left = push_left(node, new_character);
 
 	NODE* right = push_right(node, node->data);
 
-	node->data = difference;
+	node->data = strcat(difference, "?");
 
 	fseek(input, 0, SEEK_SET);
+
 	print_tree(head, input, 0);
 
 	printf("Thanks for playing\n");
@@ -277,7 +292,7 @@ int print_tree(NODE* node, FILE* output, int num_of_spaces)
 	for (int i = 0; i < num_of_spaces; i++)
 		fprintf(output, " ");
 
-	fprintf(output, "{ %s ", node->data);
+	fprintf(output, "{ '%s' ", node->data);
 
 	num_of_spaces += 5;
 
@@ -452,11 +467,13 @@ int compare_items(NODE* head)
 
 int Draw(NODE* node)
 {
-	FILE* output = fopen("graph_code.txt", "w");
+	FILE* output = fopen("graph_code_test.txt", "w");
 
 	Draw_param(node, output);
 	Draw_tree(node, output, 1);
 	fprintf(output, "}\n}");
+	
+	fclose(output);
 
 	return 0;
 }
@@ -488,7 +505,7 @@ int Draw_tree(NODE* node, FILE* output, int level)
 	{
 		fprintf(output, "   \"%s\"->\"%s\" [ label = \"No\" ];\n", node->data, node->right->data);
 		fprintf(output, "   { rank = \"same\"; \"%d\"; \"%s\"; }\n", level, node->data);
-		Draw_tree(node->right, output, (level+1));
+		Draw_tree(node->right, output, (level + 1));
 	}
 
 	return 0;
