@@ -55,6 +55,18 @@ int main()
 	Play();
 
 	return 0;
+
+	type new_character = (type)calloc(MAXDATA, sizeof(char));
+
+	fgets(new_character, 50, stdin);
+
+	ungetc(1, stdin);
+
+	printf("%s", new_character);
+
+	//system("dot -Tpng D:\\vs_projects\\Tree\\graph_code_test.txt -oD:\\vs_projects\\Tree\\graph_image.png");
+
+	return 0;
 }
 
 int Play()
@@ -213,7 +225,7 @@ int akinator(NODE* head, NODE* node, FILE* input)
 {
 	if ((node->left != nullptr) || (node->right != nullptr))
 	{
-		printf("%s\n", node->data);
+		printf("%s?\n", node->data);
 
 		char answer[10] = {};
 
@@ -256,28 +268,29 @@ int new_character(NODE* head, NODE* node, FILE* input)
 
 	type new_character = (type)calloc(MAXDATA, sizeof(char));
 
-	scanf(" %[^.]%*c", new_character);
+	scanf(" %[^\n]", new_character);
 
-	printf("Please, ask a question with answer 'yes' in case of %s and 'no' in case of %s\n", new_character, node->data);
+	printf("Please, write the difference between %s and %s\n", new_character, node->data);
 
 	type difference = (type)calloc(MAXDATA, sizeof(char));
 
 	if (!difference)
 		return 1;
 
-	scanf(" %[^?]", difference);
+	scanf(" %[^\n]", difference);
+	getchar();
 
 	NODE* left = push_left(node, new_character);
 
 	NODE* right = push_right(node, node->data);
 
-	node->data = strcat(difference, "?");
+	node->data = difference;
 
 	fseek(input, 0, SEEK_SET);
 
 	print_tree(head, input, 0);
 
-	printf("Thanks for playing\n");
+	printf("\nThanks for playing\n");
 
 	return 0;
 }
@@ -362,34 +375,79 @@ int compare_ways(NODE* node, int* way1, int* way2, char* item1, char* item2)
 {
 	int i = 0;
 
-	printf("The questions with the similar answers:\n");
+	if (way1[i] == way2[i])
+		printf("Both of them are: ");
+	else
+		printf("They have no similarities");
 
 	while ((way1[i] == way2[i]) && (way1[i+1]))
 	{
-		printf("%s   ", node->data);
-
 		if (way1[i] == 1)
 		{
-			printf("Yes\n");
+			printf("%s ", node->data);
 			node = node->left;
+
+			if (way1[i + 1] == way2[i + 1])
+				printf("and ");
 		}
 		else
 		{
-			printf("No\n");
+			printf("No ");
+			printf("%s ", node->data);
 			node = node->right;
+
+			if (way1[i + 1] == way2[i + 1])
+				printf("and ");
 		}
 
 		i++;
 	}
 
-	printf("\nThe question with the different answers:\n");
+	NODE* node_copy = node;
+	int index_copy = i;
 
-	printf("%s   \n\n", node->data);
+	if (way2[i])
+	   printf("\nBut %s is: ", item1);
 
-	if (way1[i] == 1)
-		printf("Answer Yes in case of %s\nAnswer No in case of %s", item1, item2);
-	else
-		printf("Answer Yes in case of %s\nAnswer No in case of %s\n", item2, item1);
+	while (way2[i])
+	{
+		if (way2[i] == 1)
+		{
+			printf("no %s ", node->data);
+			node = node->left;
+
+			if (way2[i + 1] == 1)
+				printf("and ");
+		}
+		else
+			node = node->right;
+
+		i++;
+	}
+
+	int stop = 0;
+
+	while (way1[index_copy])
+	{
+		if (way1[index_copy] && !stop)
+		{
+			printf("\nAnd %s is: ", item2);
+			stop = 1;
+		}
+
+		if (way1[index_copy] == 1)
+		{
+			printf("no %s ", node_copy->data);
+			node_copy = node_copy->left;
+
+			if (way1[index_copy + 1] == 1)
+				printf("and ");
+		}
+		else
+			node_copy = node_copy->right;
+
+		index_copy++;
+	}
 
 	return 0;
 }
@@ -398,7 +456,8 @@ int definition(NODE* node)
 {
 	char* item = (char*)calloc(10, sizeof(char));
 
-	scanf("%s", item);
+	scanf(" %[^\n]", item);
+	getchar();
 
 	int* way = (int*)calloc(100, sizeof(int));
 
@@ -439,8 +498,11 @@ int compare_items(NODE* head)
 	char* item1 = (char*)calloc(10, sizeof(char));
 	char* item2 = (char*)calloc(10, sizeof(char));
 
-	scanf("%s", item1);
-	scanf("%s", item2);
+	scanf(" %[^\n]", item1);
+	getchar();
+
+	scanf(" %[^\n]", item2);
+	getchar();
 
 	int* way1 = (int*)calloc(100, sizeof(int));
 	int* way2 = (int*)calloc(100, sizeof(int));
